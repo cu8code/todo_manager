@@ -6,7 +6,7 @@ const commander = require("commander")
 
 const VERIFICATION = "https://github.com/login/device/code"
 const AUTHORIZATION = "https://github.com/login/oauth/access_token"
-const CLIENT_ID = "Iv1.20bd8ed69009c678"
+const CLIENT_ID = "afc775ea851677813e35"
 const CONFIG_PATH = process.env.HOME + "/.config/todo_manger/config"
 let token = null;
 
@@ -21,17 +21,12 @@ program.parse()
 
 const current_dir = process.cwd()
 
-// async function get_token(){
-//   if(!fs.existsSync(CONFIG_PATH)){
-//     const res = await fs.mkdir(CONFIG_PATH)
-//     await sign_in()
-//   }
-// }
-async function main() {
-  console.log(await sign_in())
+async function get_token() {
+  if (!fs.existsSync(CONFIG_PATH)) {
+    const res = await fs.mkdir(CONFIG_PATH)
+    await sign_in()
+  }
 }
-
-main()
 
 function delay(time) {
   return new Promise(resolve => setTimeout(resolve, time));
@@ -81,6 +76,8 @@ async function sign_in() {
     // TODO: store the auth_code
     if (res.data.access_token) {
       is_running = false
+      console.log("token_type: " + res.data.token_type)
+      console.log("scope: " + res.data.scope)
       return res.data.access_token
     }
 
@@ -105,19 +102,19 @@ async function get_github_url() {
 }
 
 async function create_issue(url, title, body, token) {
-  await axios.post(url, {
-    title,
-    body
-  }, {
-    header: {
-      Accept: "application/vnd.github+json",
-      Authorization: `Bearer ${token}`,
-      "X-GitHub-Api-Version": "2022-11-28",
-      "assignees": ["todo_manager"],
-      "milestone": 1,
-      "labels": ["TODO"]
-    }
-  })
+  let config = {
+    method: 'post',
+    maxBodyLength: Infinity,
+    url: url,
+    headers: {
+      'Accept': 'application/vnd.github+json',
+      'Authorization': 'Bearer ' + token,
+      'X-GitHub-Api-Version': '2022-11-28',
+      'Content-Type': 'text/plain'
+    },
+    data: { title }
+  };
+  await axios.request(config)
 }
 
 
@@ -125,7 +122,7 @@ async function main() {
   const { stdout } = await exec(`git ls-tree --full-tree --name-only -r HEAD`)
   const arr = stdout.split("\n")
   const url = await get_github_url()
-  // const token = await sign_in()
+  const token = await sign_in()
   arr.pop()
   for (const i of arr) {
     try {
@@ -134,11 +131,11 @@ async function main() {
       if (null !== match) {
         if (typeof match === "string") {
           match = match.replace(/\/\/\s*TODO:/, "").trim();
-          create_issue(url, match, "", "ghu_oRkB1IHH6ZbUsLZXJOnScjlfnwm5Q20Tj8MJ")
+          create_issue(url, match, "", token)
         } else if (Array.isArray(match)) {
-          for (let i of match) {
-            i = i.replace(/\/\/\s*TODO:/, "").trim();
-            create_issue(url, i, "", "ghu_oRkB1IHH6ZbUsLZXJOnScjlfnwm5Q20Tj8MJ")
+          for (let a of match) {
+            a = a.replace(/\/\/\s*TODO:/, "").trim();
+            create_issue(url, i, "", token)
           }
         }
       }
@@ -146,6 +143,8 @@ async function main() {
       console.log("skipping... " + i)
       continue
     }
+    console.log(current_dir + "/" + i)
   }
 }
 
+main()
