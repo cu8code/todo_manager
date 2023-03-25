@@ -1,3 +1,5 @@
+#! /usr/bin/env node
+
 const axios = require("axios")
 const util = require('node:util');
 const exec = util.promisify(require('node:child_process').exec);
@@ -15,7 +17,7 @@ const program = new commander.Command()
 program
   .name("todo_manger")
   .description("a cli tool to convert all yout project TODO into github issue")
-  .version('0.1')
+  .version('4.0')
 
 program.parse()
 
