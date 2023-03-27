@@ -4,7 +4,7 @@ todoman is a simple command-line interface (CLI) app that helps developers conve
 
 ## Installation
 todoman can be installed on Linux - Ubuntu using npm, the package manager for Node.js. To install, open your terminal and enter the following command:
-`sudo npm i -g todo_manger`
+`sudo npm i -g .`
 This will install the todoman CLI globally on your system.
 
 ## Usage
